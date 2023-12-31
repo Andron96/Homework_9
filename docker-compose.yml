@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  php:
+    environment:
+      - XDEBUG_SESSION=docker-server
+    build:
+      ./
+    volumes:
+      - ./:/var/www/html
+      - ./xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    links:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    volumes:
+      - ./mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: testdb
