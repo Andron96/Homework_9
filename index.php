@@ -2,7 +2,7 @@
 class tasksHandler
 {
     public array $tasksList;
-    private static $maxTasks = 1000;
+    private static int $maxTasks = 1000;
     function __construct(array &$tasksList)
     {
         $this->tasksList = &$tasksList;
