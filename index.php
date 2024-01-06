@@ -33,16 +33,22 @@ class tasksHandler
         }
         return "Задача не добавлена или из-за неправильного значения приоритета, или из-за достижения лимита задач.\n";
     }
-    public function deleteTask(int $taskId)
+    public function deleteTask(int $taskId): string
     {
-        if ($taskId > 0) {
-            foreach ($this->tasksList as $key => $item) {
-                if ($item['Task ID'] === $taskId) {
-                    unset($this->tasksList[$key]);
-                    $this->tasksList = array_values($this->tasksList);
+        if ($this->tasksList) {
+            if ($taskId >= 0) {
+                foreach ($this->tasksList as $key => $item) {
+                    if ($item['Task ID'] === $taskId) {
+                        unset($this->tasksList[$key]);
+                        break;
+                    }
                 }
+                $this->tasksList = array_values($this->tasksList);
+                return "Задача удалена.\n";
             }
+            return "Задача не удалена из-за неправильно введенного ID.\n";
         }
+        return "Список задач пуст. Удалять нечего.\n";
     }
     public function showTasks(): string
     {
@@ -72,7 +78,7 @@ while (true) {
             break;
         case 2:
             $taskId = (int) readline("Введите ID задачи (0 и больше): ");
-            $tasksHandler->deleteTask($taskId);
+            echo $tasksHandler->deleteTask($taskId);
             echo $tasksHandler->showTasks();
             break;
         default:
