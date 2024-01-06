@@ -1,4 +1,5 @@
 <?php
+
 class tasksHandler
 {
     public array $tasksList;
@@ -61,10 +62,51 @@ class tasksHandler
         }
         return "Конец списка задач.\n*****\n";
     }
+    public function writeToFile(string $filename): string
+    {
+        $wData = "";
+        foreach ($this->tasksList as $key => $item) {
+            if ($key !== array_key_last($this->tasksList)) {
+                $wData = $wData . "ID задачи: " . $item['Task ID'] . "; Приоритет задачи: " . $item['Task priority'] . "; Имя задачи: " . $item['Task name'] . ".\n";
+            } else {
+                $wData = $wData . "ID задачи: " . $item['Task ID'] . "; Приоритет задачи: " . $item['Task priority'] . "; Имя задачи: " . $item['Task name'] . ".";
+            }
+        }
+        $wResult = file_put_contents($filename, $wData);
+        if ($wResult > 0) {
+            return "Данные успешно записаны.\n";
+        } else {
+            return "Данные записаны неуспешно.\n";
+        }
+    }
+    public function readFromFile(string $filename): array
+    {
+        $rData = file_get_contents($filename);
+        $secondaryRArray = [];
+        $preResultRArray = [];
+        $resultRArray = [];
+        if ($rData !== "") {
+            $mainRArray = explode("\n", $rData);
+            foreach ($mainRArray as $key => $item) {
+                $secondaryRArray[$key] = explode("; ", $item);
+                $secondaryRArray[$key][2] = rtrim($secondaryRArray[$key][2], ".");
+                foreach ($secondaryRArray[$key] as $secKey => $secItem) {
+                    $tempArr = explode(": ", $secItem);
+                    $preResultRArray[$key][$secKey] = $tempArr[1];
+                }
+            }
+            foreach ($preResultRArray as $key => $item) {
+                $resultRArray[$key] = ['Task ID' => (int) $item[0], 'Task priority' => (int) $item[1], 'Task name' => $item[2]];
+            }
+            $this->tasksList = $resultRArray;
+        }
+        return $resultRArray;
+    }
 }
 
 $tasksList = [];
 $tasksHandler = new tasksHandler($tasksList);
+$tasksHandler->readFromFile("Tasks.txt");
 while (true) {
     echo "Введите \"1\", что бы добавать задачу\n";
     echo "Введите \"2\", что бы удалить задачу\n";
@@ -86,3 +128,4 @@ while (true) {
     }
 }
 var_dump($tasksList);
+$tasksHandler->writeToFile("Tasks.txt");
