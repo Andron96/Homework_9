@@ -77,6 +77,19 @@ class tasksHandler
         }
         return "Конец списка задач.\n*****\n";
     }
+    public function getSortByPriorityTasks(): array
+    {
+        $sortedTasksList = [];
+        for ($priority = 15; $priority >= 1; $priority--) {
+            foreach ($this->tasksList as $item) {
+                if ($item['Task priority'] === $priority) {
+                    $sortedTasksList[] = $item;
+                }
+
+            }
+        }
+        return $sortedTasksList;
+    }
     public function writeToFile(string $filename): string
     {
         $wData = "";
@@ -191,8 +204,3 @@ while (true) {
     }
 }
 var_dump($tasksList);
-//$tasksList = ['Task ID' => TaskStatus::Undone];
-//var_dump($tasksList);
-//$a = TaskStatus::Done;
-//$tasksList['Task ID'] = $a;
-//var_dump($tasksList);
