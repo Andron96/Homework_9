@@ -116,11 +116,13 @@ while (true) {
             $taskPriority = (int) readline("Введите приоритет задачи (от 1 до 15): ");
             $taskName = (string) readline("Введите имя задачи: ");
             echo $tasksHandler->addTask($taskName, $taskPriority);
+            $tasksHandler->writeToFile("Tasks.txt");
             echo $tasksHandler->showTasks();
             break;
         case 2:
             $taskId = (int) readline("Введите ID задачи (0 и больше): ");
             echo $tasksHandler->deleteTask($taskId);
+            $tasksHandler->writeToFile("Tasks.txt");
             echo $tasksHandler->showTasks();
             break;
         default:
@@ -128,4 +130,3 @@ while (true) {
     }
 }
 var_dump($tasksList);
-$tasksHandler->writeToFile("Tasks.txt");
