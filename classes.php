@@ -34,7 +34,12 @@ class tasksHandler
                     $taskId++;
                 }
             }
-            $this->tasksList[] = ['Task ID' => $taskId, 'Task priority' => $taskPriority, 'Task name' => $taskName, 'Task status' => TaskStatus::Undone];
+            $this->tasksList[] = [
+                'Task ID' => $taskId,
+                'Task priority' => $taskPriority,
+                'Task name' => $taskName,
+                'Task status' => TaskStatus::Undone
+            ];
             return "Задача добавлена.\n";
         }
         return "Задача не добавлена или из-за неправильного значения приоритета, или из-за достижения лимита задач.\n";
@@ -111,28 +116,19 @@ class tasksHandler
     {
         $wData = "";
         foreach ($this->tasksList as $key => $item) {
+            $wData = $wData .
+                "ID задачи: " .
+                $item['Task ID'] .
+                "; Приоритет задачи: " .
+                $item['Task priority'] .
+                "; Имя задачи: " .
+                $item['Task name'] .
+                "; Статус задачи: " .
+                $item['Task status']->value;
             if ($key !== array_key_last($this->tasksList)) {
-                $wData = $wData .
-                    "ID задачи: " .
-                    $item['Task ID'] .
-                    "; Приоритет задачи: " .
-                    $item['Task priority'] .
-                    "; Имя задачи: " .
-                    $item['Task name'] .
-                    "; Статус задачи: " .
-                    $item['Task status']->value .
-                    ".\n";
+                $wData .= ".\n";
             } else {
-                $wData = $wData .
-                    "ID задачи: " .
-                    $item['Task ID'] .
-                    "; Приоритет задачи: " .
-                    $item['Task priority'] .
-                    "; Имя задачи: " .
-                    $item['Task name'] .
-                    "; Статус задачи: " .
-                    $item['Task status']->value .
-                    ".";
+                $wData .= ".";
             }
         }
         $wResult = file_put_contents($filename, $wData);
@@ -147,20 +143,23 @@ class tasksHandler
         $resultRArray = [];
         if (file_exists($filename)) {
             $rData = file_get_contents($filename);
-            $secondaryRArray = [];
-            $preResultRArray = [];
             if ($rData !== "") {
-                $mainRArray = explode("\n", $rData);
-                foreach ($mainRArray as $key => $item) {
-                    $secondaryRArray[$key] = explode("; ", $item);
-                    $secondaryRArray[$key][3] = rtrim($secondaryRArray[$key][3], ".");
-                    foreach ($secondaryRArray[$key] as $secKey => $secItem) {
-                        $tempArr = explode(": ", $secItem);
-                        $preResultRArray[$key][$secKey] = $tempArr[1];
-                    }
+                $tempRArray = explode("\n", $rData);
+                foreach ($tempRArray as $key => $item) {
+                    $item = rtrim($item, ".");
+                    $item = str_replace("ID задачи: ", "", $item);
+                    $item = str_replace(" Приоритет задачи: ", "", $item);
+                    $item = str_replace(" Имя задачи: ", "", $item);
+                    $item = str_replace(" Статус задачи: ", "", $item);
+                    $tempRArray[$key] = explode(";", $item);
                 }
-                foreach ($preResultRArray as $key => $item) {
-                    $resultRArray[$key] = ['Task ID' => (int) $item[0], 'Task priority' => (int) $item[1], 'Task name' => $item[2], 'Task status' => TaskStatus::from($item[3])];
+                foreach ($tempRArray as $key => $item) {
+                    $resultRArray[$key] = [
+                        'Task ID' => (int) $item[0],
+                        'Task priority' => (int) $item[1],
+                        'Task name' => $item[2],
+                        'Task status' => TaskStatus::from($item[3])
+                    ];
                 }
                 $this->tasksList = $resultRArray;
             }
