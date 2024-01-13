@@ -1,11 +1,5 @@
 <?php
-enum TaskStatus: string
-{
-    case Done = 'Выполнено';
-    case Undone = 'Невыполнено';
-}
-
-class tasksHandler
+class TasksHandler
 {
     public array $tasksList;
     private static int $maxTasks = 1000;

@@ -1,9 +1,10 @@
 <?php
 
-include "classes.php";
+include "TaskStatus.php";
+include "TaskHandler.php";
 
 $tasksList = [];
-$tasksHandler = new tasksHandler($tasksList);
+$tasksHandler = new TasksHandler($tasksList);
 $tasksHandler->readFromFile("Tasks.txt");
 echo $tasksHandler->showTasks();
 while (true) {
