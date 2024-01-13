@@ -1,11 +1,36 @@
 <?php
 class TasksHandler
 {
-    public array $tasksList;
+    public array $tasksList = [];
     private static int $maxTasks = 1000;
-    function __construct(array &$tasksList)
+    function __construct(string $filename)
     {
-        $this->tasksList = &$tasksList;
+        $resultRArray = [];
+        if (file_exists($filename)) {
+            $rData = file_get_contents($filename);
+            if ($rData !== "") {
+                $tempRArray = explode("\n", $rData);
+                foreach ($tempRArray as $key => $item) {
+                    $item = rtrim($item, ".");
+                    $item = str_replace("ID задачи: ", "", $item);
+                    $item = str_replace(" Приоритет задачи: ", "", $item);
+                    $item = str_replace(" Имя задачи: ", "", $item);
+                    $item = str_replace(" Статус задачи: ", "", $item);
+                    $tempRArray[$key] = explode(";", $item);
+                }
+                foreach ($tempRArray as $key => $item) {
+                    $resultRArray[$key] = [
+                        'Task ID' => (int) $item[0],
+                        'Task priority' => (int) $item[1],
+                        'Task name' => $item[2],
+                        'Task status' => TaskStatus::from($item[3])
+                    ];
+                }
+                $this->tasksList = $resultRArray;
+            }
+        } else {
+            echo "Файл со списком задач не найден.\n";
+        }
     }
     public function addTask(string $taskName, int $taskPriority): string
     {
@@ -132,36 +157,6 @@ class TasksHandler
             return "Данные записаны неуспешно.\n";
         }
     }
-    public function readFromFile(string $filename): array
-    {
-        $resultRArray = [];
-        if (file_exists($filename)) {
-            $rData = file_get_contents($filename);
-            if ($rData !== "") {
-                $tempRArray = explode("\n", $rData);
-                foreach ($tempRArray as $key => $item) {
-                    $item = rtrim($item, ".");
-                    $item = str_replace("ID задачи: ", "", $item);
-                    $item = str_replace(" Приоритет задачи: ", "", $item);
-                    $item = str_replace(" Имя задачи: ", "", $item);
-                    $item = str_replace(" Статус задачи: ", "", $item);
-                    $tempRArray[$key] = explode(";", $item);
-                }
-                foreach ($tempRArray as $key => $item) {
-                    $resultRArray[$key] = [
-                        'Task ID' => (int) $item[0],
-                        'Task priority' => (int) $item[1],
-                        'Task name' => $item[2],
-                        'Task status' => TaskStatus::from($item[3])
-                    ];
-                }
-                $this->tasksList = $resultRArray;
-            }
-        } else {
-            echo "Файл со списком задач не найден.\n";
-        }
-        return $resultRArray;
-    }
     public function changeTaskStatus(int $taskId, $taskStatus): string
     {
         if ($this->tasksList) {
@@ -181,5 +176,9 @@ class TasksHandler
             return "Вы ввели неправильное значение ID задачи. Статус задачи остался прежним.\n";
         }
         return "Список задач пуст. Изменять нечего.\n";
+    }
+    public function getTaskListArr(): array
+    {
+        return $this->tasksList;
     }
 }

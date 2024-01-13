@@ -3,9 +3,7 @@
 include "TaskStatus.php";
 include "TaskHandler.php";
 
-$tasksList = [];
-$tasksHandler = new TasksHandler($tasksList);
-$tasksHandler->readFromFile("Tasks.txt");
+$tasksHandler = new TasksHandler("Tasks.txt");
 echo $tasksHandler->showTasks();
 while (true) {
     echo "Введите \"1\", что бы добавать задачу\n";
@@ -40,4 +38,4 @@ while (true) {
             break 2;
     }
 }
-var_dump($tasksList);
+var_dump($tasksHandler->getTaskListArr());
