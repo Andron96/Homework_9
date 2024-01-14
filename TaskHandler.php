@@ -179,23 +179,27 @@ class TasksHandler
     }
     public function changeTaskStatus(int $taskId, $taskStatus): string
     {
-        if ($this->tasksList) {
-            if ($taskId >= 0) {
-                $taskStatus = TaskStatus::tryFrom($taskStatus);
-                if ($taskStatus === null) {
-                    return "Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n";
-                }
-                foreach ($this->tasksList as $key => $item) {
-                    if ($item['Task ID'] === $taskId) {
-                        $this->tasksList[$key]['Task status'] = $taskStatus;
-                        return "Статус задачи изменен.\n";
+        try {
+            if ($this->tasksList) {
+                if ($taskId >= 0) {
+                    $taskStatus = TaskStatus::tryFrom($taskStatus);
+                    if ($taskStatus === null) {
+                        throw new TaskNotChangedException("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
                     }
+                    foreach ($this->tasksList as $key => $item) {
+                        if ($item['Task ID'] === $taskId) {
+                            $this->tasksList[$key]['Task status'] = $taskStatus;
+                            return "Статус задачи изменен.\n";
+                        }
+                    }
+                    throw new TaskNotFoundException("Зачада с введенным ID не найдена.\n");
                 }
-                return "Зачада с введенным ID не найдена.\n";
+                throw new TaskNotChangedException("Вы ввели неправильное значение ID задачи. Статусы задач остались прежними.\n");
             }
-            return "Вы ввели неправильное значение ID задачи. Статус задачи остался прежним.\n";
+            throw new NothingToChangeException("Список задач пуст. Изменять нечего.\n");
+        } catch (TaskNotFoundException | TaskNotChangedException | NothingToChangeException $e) {
+            return $e->getMessage();
         }
-        return "Список задач пуст. Изменять нечего.\n";
     }
     public function getTaskListArr(): array
     {

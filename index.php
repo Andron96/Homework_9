@@ -4,6 +4,8 @@ include "TaskStatus.php";
 include "NothingToDeleteException.php";
 include "TaskNotDeletedException.php";
 include "TaskNotFoundException.php";
+include "NothingToChangeException.php";
+include "TaskNotChangedException.php";
 include "TaskHandler.php";
 
 $tasksHandler = new TasksHandler("Tasks.txt");
