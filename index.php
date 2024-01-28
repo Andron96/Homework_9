@@ -1,15 +1,10 @@
 <?php
 
-include "TaskStatus.php";
-include "NothingToDeleteException.php";
-include "TaskNotDeletedException.php";
-include "TaskNotFoundException.php";
-include "NothingToChangeException.php";
-include "TaskNotChangedException.php";
-include "TaskHandler.php";
+require_once "TaskStatus.php";
+require_once "TaskHandler.php";
 
 $tasksHandler = new TasksHandler("Tasks.txt");
-echo $tasksHandler->showTasks();
+$tasksHandler->showTasks();
 while (true) {
     echo "Введите \"1\", что бы добавать задачу\n";
     echo "Введите \"2\", что бы удалить задачу\n";
@@ -20,21 +15,33 @@ while (true) {
         case 1:
             $taskPriority = (int) readline("Введите приоритет задачи (от 1 до 15): ");
             $taskName = (string) readline("Введите имя задачи: ");
-            echo $tasksHandler->addTask($taskName, $taskPriority);
-            $tasksHandler->writeToFile("Tasks.txt");
-            echo $tasksHandler->showTasks();
+            try {
+                echo $tasksHandler->addTask($taskName, $taskPriority);
+                $tasksHandler->writeToFile("Tasks.txt");
+            } catch (Exception $e) {
+                echo $e->getMessage();
+            }
+            $tasksHandler->showTasks();
             break;
         case 2:
             $taskId = (int) readline("Введите ID задачи (0 и больше): ");
-            echo $tasksHandler->deleteTask($taskId);
-            $tasksHandler->writeToFile("Tasks.txt");
-            echo $tasksHandler->showTasks();
+            try {
+                echo $tasksHandler->deleteTask($taskId);
+                $tasksHandler->writeToFile("Tasks.txt");
+            } catch (Exception $e) {
+                echo $e->getMessage();
+            }
+            $tasksHandler->showTasks();
             break;
         case 3:
             $taskId = (int) readline("Введите ID задачи (0 и больше): ");
-            echo $tasksHandler->changeTaskStatus($taskId, readline("Введите статус задачи (\"Выполнено\" или \"Невыполнено\"): "));
-            $tasksHandler->writeToFile("Tasks.txt");
-            echo $tasksHandler->showTasks();
+            try {
+                echo $tasksHandler->changeTaskStatus($taskId, readline("Введите статус задачи (\"Выполнено\" или \"Невыполнено\"): "));
+                $tasksHandler->writeToFile("Tasks.txt");
+            } catch (Exception $e) {
+                echo $e->getMessage();
+            }
+            $tasksHandler->showTasks();
             break;
         case 4:
             $tasksHandler->getSortByPriorityTasksList();

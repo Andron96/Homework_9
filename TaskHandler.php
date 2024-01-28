@@ -1,127 +1,166 @@
 <?php
 class TasksHandler
 {
-    public array $tasksList = [];
+    private array $tasksList = [];
     private static int $maxTasks = 1000;
-    function __construct(string $filename)
+    function __construct(string $fileName)
     {
-        try {
-            $resultRArray = [];
-            if (file_exists($filename)) {
-                $rData = file_get_contents($filename);
-                if ($rData !== "") {
-                    $tempRArray = explode("\n", $rData);
-                    foreach ($tempRArray as $key => $item) {
-                        $item = rtrim($item, ".");
-                        $item = str_replace("ID задачи: ", "", $item);
-                        $item = str_replace(" Приоритет задачи: ", "", $item);
-                        $item = str_replace(" Имя задачи: ", "", $item);
-                        $item = str_replace(" Статус задачи: ", "", $item);
-                        $tempRArray[$key] = explode(";", $item);
-                    }
-                    foreach ($tempRArray as $key => $item) {
-                        $resultRArray[$key] = [
-                            'Task ID' => (int) $item[0],
-                            'Task priority' => (int) $item[1],
-                            'Task name' => $item[2],
-                            'Task status' => TaskStatus::from($item[3])
-                        ];
-                    }
-                    $this->tasksList = $resultRArray;
-                }
+        $this->readFromFile($fileName);
+    }
+    private function setTaskListArr(array $resultArr): void
+    {
+        $this->tasksList = $resultArr;
+    }
+    private function setNewElOfTaskListArr(array $newEl): void
+    {
+        $this->tasksList[] = $newEl;
+    }
+    private function unsetElOfTaskListArr(int $key): void
+    {
+        unset($this->tasksList[$key]);
+    }
+    private function validateTaskPriority($taskPriority): bool
+    {
+        if (
+            ($taskPriority >= 1)
+            && ($taskPriority <= 15)
+            && (count($this->getTaskListArr()) <= self::$maxTasks)
+        ) {
+            return true;
+        }
+        return false;
+    }
+    public function getTaskListArr(): array
+    {
+        return $this->tasksList;
+    }
+    public function writeToFile(string $filename): string
+    {
+        $wData = "";
+        foreach ($this->getTaskListArr() as $key => $item) {
+            $wData = $wData .
+                "ID задачи: " .
+                $item['Task ID'] .
+                "; Приоритет задачи: " .
+                $item['Task priority'] .
+                "; Имя задачи: " .
+                $item['Task name'] .
+                "; Статус задачи: " .
+                $item['Task status']->value;
+            if ($key !== array_key_last($this->getTaskListArr())) {
+                $wData .= ".\n";
             } else {
-                throw new Exception("Файл со списком задач не найден.\n");
+                $wData .= ".";
             }
-        } catch (Exception $e) {
-            echo $e->getMessage();
+        }
+        $wResult = file_put_contents($filename, $wData);
+        if ($wResult > 0) {
+            return "Данные успешно записаны.\n";
+        } else {
+            throw new Exception("Данные записаны неуспешно.\n");
+        }
+    }
+    public function readFromFile(string $fileName): void
+    {
+        $resultRArray = [];
+        if (file_exists($fileName)) {
+            $rData = file_get_contents($fileName);
+            if ($rData !== "") {
+                $tempRArray = explode("\n", $rData);
+                foreach ($tempRArray as $key => $item) {
+                    $item = rtrim($item, ".");
+                    $item = str_replace("ID задачи: ", "", $item);
+                    $item = str_replace(" Приоритет задачи: ", "", $item);
+                    $item = str_replace(" Имя задачи: ", "", $item);
+                    $item = str_replace(" Статус задачи: ", "", $item);
+                    $tempRArray[$key] = explode(";", $item);
+                }
+                foreach ($tempRArray as $key => $item) {
+                    $resultRArray[$key] = [
+                        'Task ID' => (int) $item[0],
+                        'Task priority' => (int) $item[1],
+                        'Task name' => $item[2],
+                        'Task status' => TaskStatus::from($item[3])
+                    ];
+                }
+                $this->setTaskListArr($resultRArray);
+            }
+        } else {
+            echo "Файл со списком задач не найден.\n";
         }
     }
     public function addTask(string $taskName, int $taskPriority): string
     {
-        try {
-            if (
-                ($taskPriority >= 1)
-                && ($taskPriority <= 15)
-                && (count($this->tasksList) <= self::$maxTasks)
-            ) {
-                $taskId = 0;
-                if ($this->tasksList) {
-                    while ($taskId <= self::$maxTasks) {
-                        foreach ($this->tasksList as $key => $item) {
-                            if ($item['Task ID'] === $taskId) {
-                                break;
-                            }
-                            if ($key === array_key_last($this->tasksList)) {
-                                break 2;
-                            }
+        if ($this->validateTaskPriority($taskPriority)) {
+            $taskId = 0;
+            if ($this->getTaskListArr()) {
+                while ($taskId <= self::$maxTasks) {
+                    foreach ($this->getTaskListArr() as $key => $item) {
+                        if ($item['Task ID'] === $taskId) {
+                            break;
                         }
-                        $taskId++;
+                        if ($key === array_key_last($this->getTaskListArr())) {
+                            break 2;
+                        }
                     }
+                    $taskId++;
                 }
-                $this->tasksList[] = [
-                    'Task ID' => $taskId,
-                    'Task priority' => $taskPriority,
-                    'Task name' => $taskName,
-                    'Task status' => TaskStatus::Undone
-                ];
-                return "Задача добавлена.\n";
             }
-            throw new Exception("Задача не добавлена или из-за неправильного значения приоритета, или из-за достижения лимита задач.\n");
-        } catch (Exception $e) {
-            return $e->getMessage();
+            $this->setNewElOfTaskListArr([
+                'Task ID' => $taskId,
+                'Task priority' => $taskPriority,
+                'Task name' => $taskName,
+                'Task status' => TaskStatus::Undone
+            ]);
+            return "Задача добавлена.\n";
         }
+        throw new Exception("Задача не добавлена или из-за неправильного значения приоритета, или из-за достижения лимита задач.\n");
     }
     public function deleteTask(int $taskId): string
     {
-        try {
-            if ($this->tasksList) {
-                if ($taskId >= 0) {
-                    foreach ($this->tasksList as $key => $item) {
-                        if ($item['Task ID'] === $taskId) {
-                            unset($this->tasksList[$key]);
-                            $this->tasksList = array_values($this->tasksList);
-                            return "Задача удалена.\n";
-                        }
+        if ($this->getTaskListArr()) {
+            if ($taskId >= 0) {
+                foreach ($this->getTaskListArr() as $key => $item) {
+                    if ($item['Task ID'] === $taskId) {
+                        $this->unsetElOfTaskListArr($key);
+                        $this->setTaskListArr(array_values($this->getTaskListArr()));
+                        return "Задача удалена.\n";
                     }
-                    throw new TaskNotFoundException("Задача c введенным ID не найдена.\n");
                 }
-                throw new TaskNotDeletedException("Задача не удалена из-за неправильно введенного ID.\n");
+                throw new Exception("Задача c введенным ID не найдена.\n");
             }
-            throw new NothingToDeleteException("Список задач пуст. Удалять нечего.\n");
-        } catch (TaskNotFoundException | TaskNotDeletedException | NothingToDeleteException $e) {
-            return $e->getMessage();
+            throw new Exception("Задача не удалена из-за неправильно введенного ID.\n");
         }
+        throw new Exception("Список задач пуст. Удалять нечего.\n");
     }
-    public function showTasks(): string
+    public function showTasks(): array
     {
-        try {
-            if (!$this->tasksList) {
-                throw new Exception("*****\nСписок задач пуст.\n*****\n");
-            }
-            echo "*****\nНачало списка задач.\n";
-            foreach ($this->tasksList as $item) {
-                echo "ID задачи: " .
-                    $item['Task ID'] .
-                    "; Приоритет задачи: " .
-                    $item['Task priority'] .
-                    "; Имя задачи: " .
-                    $item['Task name'] .
-                    "; Статус задачи: " .
-                    $item['Task status']->value .
-                    "." .
-                    "\n";
-            }
-            return "Конец списка задач.\n*****\n";
-        } catch (Exception $e) {
-            return $e->getMessage();
+        if (!$this->getTaskListArr()) {
+            echo "*****\nСписок задач пуст.\n*****\n";
+            return $this->getTaskListArr();
         }
+        echo "*****\nНачало списка задач.\n";
+        foreach ($this->getTaskListArr() as $item) {
+            echo "ID задачи: " .
+                $item['Task ID'] .
+                "; Приоритет задачи: " .
+                $item['Task priority'] .
+                "; Имя задачи: " .
+                $item['Task name'] .
+                "; Статус задачи: " .
+                $item['Task status']->value .
+                "." .
+                "\n";
+        }
+        echo "Конец списка задач.\n*****\n";
+        return $this->getTaskListArr();
     }
     public function getSortByPriorityTasksList(): array
     {
         $sortedTasksList = [];
-        if ($this->tasksList) {
+        if ($this->getTaskListArr()) {
             for ($priority = 15; $priority >= 1; $priority--) {
-                foreach ($this->tasksList as $item) {
+                foreach ($this->getTaskListArr() as $item) {
                     if ($item['Task priority'] === $priority) {
                         $sortedTasksList[] = $item;
                     }
@@ -147,62 +186,24 @@ class TasksHandler
         }
         return $sortedTasksList;
     }
-    public function writeToFile(string $filename): string
-    {
-        $wData = "";
-        foreach ($this->tasksList as $key => $item) {
-            $wData = $wData .
-                "ID задачи: " .
-                $item['Task ID'] .
-                "; Приоритет задачи: " .
-                $item['Task priority'] .
-                "; Имя задачи: " .
-                $item['Task name'] .
-                "; Статус задачи: " .
-                $item['Task status']->value;
-            if ($key !== array_key_last($this->tasksList)) {
-                $wData .= ".\n";
-            } else {
-                $wData .= ".";
-            }
-        }
-        $wResult = file_put_contents($filename, $wData);
-        try {
-            if ($wResult > 0) {
-                return "Данные успешно записаны.\n";
-            } else {
-                throw new Exception("Данные записаны неуспешно.\n");
-            }
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-    }
     public function changeTaskStatus(int $taskId, $taskStatus): string
     {
-        try {
-            if ($this->tasksList) {
-                if ($taskId >= 0) {
-                    $taskStatus = TaskStatus::tryFrom($taskStatus);
-                    if ($taskStatus === null) {
-                        throw new TaskNotChangedException("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
-                    }
-                    foreach ($this->tasksList as $key => $item) {
-                        if ($item['Task ID'] === $taskId) {
-                            $this->tasksList[$key]['Task status'] = $taskStatus;
-                            return "Статус задачи изменен.\n";
-                        }
-                    }
-                    throw new TaskNotFoundException("Зачада с введенным ID не найдена.\n");
+        if ($this->getTaskListArr()) {
+            if ($taskId >= 0) {
+                $taskStatus = TaskStatus::tryFrom($taskStatus);
+                if ($taskStatus === null) {
+                    throw new Exception("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
                 }
-                throw new TaskNotChangedException("Вы ввели неправильное значение ID задачи. Статусы задач остались прежними.\n");
+                foreach ($this->getTaskListArr() as $key => $item) {
+                    if ($item['Task ID'] === $taskId) {
+                        $this->tasksList[$key]['Task status'] = $taskStatus;
+                        return "Статус задачи изменен.\n";
+                    }
+                }
+                throw new Exception("Зачада с введенным ID не найдена.\n");
             }
-            throw new NothingToChangeException("Список задач пуст. Изменять нечего.\n");
-        } catch (TaskNotFoundException | TaskNotChangedException | NothingToChangeException $e) {
-            return $e->getMessage();
+            throw new Exception("Вы ввели неправильное значение ID задачи. Статусы задач остались прежними.\n");
         }
-    }
-    public function getTaskListArr(): array
-    {
-        return $this->tasksList;
+        throw new Exception("Список задач пуст. Изменять нечего.\n");
     }
 }
