@@ -56,9 +56,8 @@ class TasksHandler
         $wResult = file_put_contents($filename, $wData);
         if ($wResult > 0) {
             return "Данные успешно записаны.\n";
-        } else {
-            throw new Exception("Данные записаны неуспешно.\n");
         }
+        throw new Exception("Данные записаны неуспешно.\n");
     }
     public function readFromFile(string $fileName): void
     {
@@ -118,18 +117,33 @@ class TasksHandler
     }
     public function deleteTask(int $taskId): string
     {
-        if ($this->getTaskListArr()) {
-            if ($taskId >= 0) {
-                foreach ($this->getTaskListArr() as $key => $item) {
-                    if ($item['Task ID'] === $taskId) {
-                        $this->unsetElOfTaskListArr($key);
-                        $this->setTaskListArr(array_values($this->getTaskListArr()));
-                        return "Задача удалена.\n";
-                    }
-                }
-                throw new Exception("Задача c введенным ID не найдена.\n");
-            }
+//        if ($this->getTaskListArr()) {
+//            if ($taskId >= 0) {
+//                foreach ($this->getTaskListArr() as $key => $item) {
+//                    if ($item['Task ID'] === $taskId) {
+//                        $this->unsetElOfTaskListArr($key);
+//                        $this->setTaskListArr(array_values($this->getTaskListArr()));
+//                        return "Задача удалена.\n";
+//                    }
+//                }
+//                throw new Exception("Задача c введенным ID не найдена.\n");
+//            }
+//            throw new Exception("Задача не удалена из-за неправильно введенного ID.\n");
+//        }
+//        throw new Exception("Список задач пуст. Удалять нечего.\n");
+
+        if (($this->getTaskListArr()) && ($taskId < 0)) {
             throw new Exception("Задача не удалена из-за неправильно введенного ID.\n");
+        }
+        if (($this->getTaskListArr()) && ($taskId >= 0)) {
+            foreach ($this->getTaskListArr() as $key => $item) {
+                if ($item['Task ID'] === $taskId) {
+                    $this->unsetElOfTaskListArr($key);
+                    $this->setTaskListArr(array_values($this->getTaskListArr()));
+                    return "Задача удалена.\n";
+                }
+            }
+            throw new Exception("Задача c введенным ID не найдена.\n");
         }
         throw new Exception("Список задач пуст. Удалять нечего.\n");
     }
@@ -188,21 +202,39 @@ class TasksHandler
     }
     public function changeTaskStatus(int $taskId, $taskStatus): string
     {
-        if ($this->getTaskListArr()) {
-            if ($taskId >= 0) {
-                $taskStatus = TaskStatus::tryFrom($taskStatus);
-                if ($taskStatus === null) {
-                    throw new Exception("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
-                }
-                foreach ($this->getTaskListArr() as $key => $item) {
-                    if ($item['Task ID'] === $taskId) {
-                        $this->tasksList[$key]['Task status'] = $taskStatus;
-                        return "Статус задачи изменен.\n";
-                    }
-                }
-                throw new Exception("Зачада с введенным ID не найдена.\n");
-            }
+//        if ($this->getTaskListArr()) {
+//            if ($taskId >= 0) {
+//                $taskStatus = TaskStatus::tryFrom($taskStatus);
+//                if ($taskStatus === null) {
+//                    throw new Exception("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
+//                }
+//                foreach ($this->getTaskListArr() as $key => $item) {
+//                    if ($item['Task ID'] === $taskId) {
+//                        $this->tasksList[$key]['Task status'] = $taskStatus;
+//                        return "Статус задачи изменен.\n";
+//                    }
+//                }
+//                throw new Exception("Зачада с введенным ID не найдена.\n");
+//            }
+//            throw new Exception("Вы ввели неправильное значение ID задачи. Статусы задач остались прежними.\n");
+//        }
+//        throw new Exception("Список задач пуст. Изменять нечего.\n");
+
+        if (($this->getTaskListArr()) && ($taskId < 0)) {
             throw new Exception("Вы ввели неправильное значение ID задачи. Статусы задач остались прежними.\n");
+        }
+        if (($this->getTaskListArr()) && ($taskId >= 0)) {
+            $taskStatus = TaskStatus::tryFrom($taskStatus);
+            if ($taskStatus === null) {
+                throw new Exception("Вы ввели неверное значение статуса задачи. Статус задачи остался прежним.\n");
+            }
+            foreach ($this->getTaskListArr() as $key => $item) {
+                if ($item['Task ID'] === $taskId) {
+                    $this->tasksList[$key]['Task status'] = $taskStatus;
+                    return "Статус задачи изменен.\n";
+                }
+            }
+            throw new Exception("Зачада с введенным ID не найдена.\n");
         }
         throw new Exception("Список задач пуст. Изменять нечего.\n");
     }
